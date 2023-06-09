@@ -4,6 +4,13 @@ from typing import Any, Dict, List, Type
 
 from bs4 import BeautifulSoup
 
+''' Remove undesirable characters from a string which show up inside a table cell '''
+def clean_string(str):
+    str = str.replace('\n','')
+    str = str.replace('*','')
+    str = str.replace('+','')
+    str = str.strip()
+    return str
 
 class RowParser(abc.ABC):
     @property
@@ -43,7 +50,7 @@ class TimeParser(UnaryFieldParser):
         self.fmt = fmt
 
     def parse(self, field: BeautifulSoup) -> Dict[str, time]:
-        date_string = field.text
+        date_string = clean_string(field.text)
         return {
             self.field_name: datetime.strptime(date_string, self.fmt).time()
         }
@@ -51,18 +58,18 @@ class TimeParser(UnaryFieldParser):
 
 class IdentityParser(UnaryFieldParser):
     def parse(self, field: BeautifulSoup) -> Dict[str, Any]:
-        return {self.field_name: field.text}
+        return {self.field_name: clean_string(field.text)}
 
 
 class StrToIntParser(UnaryFieldParser):
     def parse(self, field: BeautifulSoup) -> Dict[str, Any]:
-        field_str = field.text
+        field_str = clean_string(field.text)
         return {self.field_name: int(field_str)}
 
 
 class NullableStrToIntParser(UnaryFieldParser):
     def parse(self, field: BeautifulSoup) -> Dict[str, Any]:
-        field_str = field.text
+        field_str = clean_string(field.text)
         if not field_str:
             return {self.field_name: None}
         return {self.field_name: int(field_str)}
@@ -70,13 +77,13 @@ class NullableStrToIntParser(UnaryFieldParser):
 
 class StrToFloatParser(UnaryFieldParser):
     def parse(self, field: BeautifulSoup) -> Dict[str, Any]:
-        field_str = field.text
+        field_str = clean_string(field.text)
         return {self.field_name: float(field_str)}
 
 
 class NullableStrToFloatParser(UnaryFieldParser):
     def parse(self, field: BeautifulSoup) -> Dict[str, Any]:
-        field_str = field.text
+        field_str = clean_string(field.text)
         if not field_str:
             return {self.field_name: None}
         return {self.field_name: float(field_str)}
@@ -84,14 +91,14 @@ class NullableStrToFloatParser(UnaryFieldParser):
 
 class StrPercentageToFloatParser(UnaryFieldParser):
     def parse(self, field: BeautifulSoup) -> Dict[str, Any]:
-        field_str = field.text
+        field_str = clean_string(field.text)
         percentage = float(field_str[:-1])
         return {self.field_name: percentage / 100.}
 
 
 class NullableStrPercentageToFloatParser(UnaryFieldParser):
     def parse(self, field: BeautifulSoup) -> Dict[str, Any]:
-        field_str = field.text
+        field_str = clean_string(field.text)
         if not field_str:
             return {self.field_name: None}
         percentage = float(field_str[:-1])
@@ -106,7 +113,7 @@ class PlayerRowParser(RowParser):
     def parse(self, field: BeautifulSoup):
         player_id = field['data-append-csv']
         player_csk = field['csk']
-        player_name = field.text
+        player_name = clean_string(field.text)
         return {
             'player_id': player_id,
             'player_csk': player_csk,

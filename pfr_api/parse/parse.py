@@ -136,6 +136,23 @@ PARSERS = {
     'punt_ret_td': NullableStrToIntParser('punt_ret_td'),
     'special_teams': NullableStrToIntParser('special_teams'),
     'st_pct': NullableStrPercentageToFloatParser('st_pct'),
+    'punt':NullableStrToIntParser('punt'),
+    'punt_yds':NullableStrToIntParser('punt_yds'),
+    'punt_yds_per_punt':NullableStrToFloatParser('punt_yds_per_punt'),
+    'punt_ret_yds_opp':NullableStrToIntParser('punt_ret_yds_opp'),
+    'punt_net_yds':NullableStrToIntParser('punt_net_yds'),
+    'punt_net_yds_per_punt':NullableStrToFloatParser('punt_net_yds_per_punt'),
+    'punt_tb':NullableStrToIntParser('punt_tb'),
+    'punt_tb_pct':NullableStrPercentageToFloatParser('punt_tb_pct'),
+    'punt_in_20':NullableStrToIntParser('punt_in_20'),
+    'punt_in_20_pct':NullableStrPercentageToFloatParser('punt_in_20_pct'),
+    'punt_blocked':NullableStrToIntParser('punt_blocked'),
+    'xpm':NullableStrToIntParser('xpm'),
+    'xpa':NullableStrToIntParser('xpa'),
+    'xp_perc':NullableStrPercentageToFloatParser('xp_perc'),
+    'fgm':NullableStrToIntParser('fgm'),
+    'fga':NullableStrToIntParser('fga'),
+    'fg_perc':NullableStrPercentageToFloatParser('fg_perc'),
 
     # defensive
     'sacks': NullableStrToFloatParser('sacks'),
@@ -154,6 +171,7 @@ PARSERS = {
     'pass_defended': NullableStrToIntParser('pass_defended'),
     'defense': NullableStrToIntParser('defense'),
     'def_pct': NullableStrPercentageToFloatParser('def_pct'),
+    'safety_md':NullableStrToIntParser('safety_md'),
 
     # Fantasy-specific
     'player': IdentityParser('player'),
@@ -230,6 +248,9 @@ PARSERS = {
     'exp_pts_def': NullableStrToFloatParser('exp_pts_def'),
     'exp_pts_st': NullableStrToFloatParser('exp_pts_st'),
 
+    # Player status
+    'status':IdentityParser('status')
+
 }  # type: Dict[str, RowParser]
 
 
@@ -247,7 +268,10 @@ def parse_stats_table(
     parsers = {**PARSERS, **parsers}
 
     column_infos = []
-    html_columns = table.find('thead').find_all('tr')[-1]
+    try:
+        html_columns = table.find('thead').find_all('tr')[-1]
+    except AttributeError:
+        raise UserWarning('No table found. Did you pass in a non-existent page?')
     for column in html_columns.find_all('th'):
         stat = column['data-stat']
         name = column.text
@@ -258,7 +282,7 @@ def parse_stats_table(
     for column_stat, column_name in column_infos:
         parser = parsers[column_stat]
         output_columns.extend(parser.output_fields)
-
+                             
     rows = []
     html_body = table.find('tbody')
     html_rows = html_body.find_all(
